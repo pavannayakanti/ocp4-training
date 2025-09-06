@@ -13,7 +13,7 @@ This document maps where **Local Sandbox (CRC/OpenShift Local)** and **Cloud Int
   - Explore projects, users  
   - Deploy a sample app (nginx)  
 - ✅ **Why local?**  
-  - Every student can install on their laptop.  
+  - Every trainee can install on their laptop.  
   - No dependency on internet/cloud resources.  
   - Good for individual experimentation.
 
