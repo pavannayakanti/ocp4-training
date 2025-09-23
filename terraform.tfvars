@@ -7,7 +7,7 @@ support_role_arn      = "arn:aws:iam::241533118255:role/ManagedOpenShift-Support
 controlplane_role_arn = "arn:aws:iam::241533118255:role/ManagedOpenShift-ControlPlane-Role"
 worker_role_arn       = "arn:aws:iam::241533118255:role/ManagedOpenShift-Worker-Role"
 
-openshift_version  = "openshift-v4.19.11" # note: must match OCM version ID
+openshift_version  = "openshift-v4.19.11"
 compute_nodes      = 2
 compute_machine_type = "m5.xlarge"
 
