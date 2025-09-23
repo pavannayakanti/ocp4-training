@@ -16,6 +16,30 @@ resource "null_resource" "install_rosa" {
   }
 }
 
+resource "null_resource" "rosa_login" {
+  provisioner "local-exec" {
+    command = "rosa login --token=${var.rosa_token}"
+  }
+}
+
+resource "null_resource" "rosa_cluster" {
+  depends_on = [null_resource.rosa_login]
+
+  triggers = {
+    cluster_name = var.cluster_name
+    role_prefix  = var.role_prefix
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      echo ">>> Creating ROSA cluster: ${var.cluster_name}"
+      rosa create cluster \
+        --cluster-name ${var.cluster_name} \
+        ...
+    EOT
+  }
+}
+
 resource "null_resource" "rosa_cluster" {
   # Triggers (used for destroy-time provisioners)
 depends_on = [null_resource.install_rosa]
