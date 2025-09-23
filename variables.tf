@@ -1,5 +1,10 @@
 variable "cluster_name" { type = string }
-variable "cluster_admin_password" { type = string; sensitive = true }
+
+variable "cluster_admin_password" {
+  type      = string
+  sensitive = true
+}
+
 variable "role_arn" { type = string }
 variable "support_role_arn" { type = string }
 variable "controlplane_role_arn" { type = string }
