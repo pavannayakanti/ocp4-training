@@ -1,3 +1,4 @@
+/* 
 output "cluster_name" {
   value = ocm_cluster.iris_ocp4.name
 }
@@ -13,3 +14,4 @@ output "api_url" {
 output "console_url" {
   value = ocm_cluster.iris_ocp4.console_url
 }
+*/
