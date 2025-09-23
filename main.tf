@@ -54,26 +54,28 @@ resource "null_resource" "rosa_cluster" {
   }
 }
 
-# Fetch cluster info (flatten into key/values for Terraform)
+# Fetch cluster info safely
 data "external" "cluster_info" {
   program = [
     "bash", "-c", <<EOT
-      rosa describe cluster --cluster ${var.cluster_name} -o json | jq -r '{
-        api_url: .api.url,
-        console_url: .console.url
-      }'
+      rosa describe cluster --cluster ${var.cluster_name} -o json 2>/dev/null \
+      | jq -r '{
+          api_url: (.api.url // ""),
+          console_url: (.console.url // "")
+        }'
     EOT
   ]
 }
 
-# Fetch kubeadmin credentials (flattened)
+# Fetch admin credentials safely
 data "external" "cluster_creds" {
   program = [
     "bash", "-c", <<EOT
-      rosa describe admin --cluster ${var.cluster_name} -o json | jq -r '{
-        username: .username,
-        password: .password
-      }'
+      rosa describe admin --cluster ${var.cluster_name} -o json 2>/dev/null \
+      | jq -r '{
+          username: (.username // ""),
+          password: (.password // "")
+        }'
     EOT
   ]
 }
