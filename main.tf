@@ -32,18 +32,23 @@ resource "null_resource" "rosa_cluster" {
     EOT
   }
 
-  # Destroy cluster and related IAM
+  # Destroy cluster and IAM (use env vars instead of var.* directly)
   provisioner "local-exec" {
     when    = destroy
     command = <<EOT
-      echo ">>> Deleting ROSA cluster: ${var.cluster_name}"
-      rosa delete cluster --cluster ${var.cluster_name} --yes --watch
+      echo ">>> Deleting ROSA cluster"
+      rosa delete cluster --cluster $CLUSTER_NAME --yes --watch
 
       echo ">>> Deleting Operator Roles"
-      rosa delete operator-roles --prefix ${var.role_prefix} --mode auto --yes
+      rosa delete operator-roles --prefix $ROLE_PREFIX --mode auto --yes
 
       echo ">>> Deleting OIDC Provider"
-      rosa delete oidc-provider --cluster ${var.cluster_name} --mode auto --yes
+      rosa delete oidc-provider --cluster $CLUSTER_NAME --mode auto --yes
     EOT
+
+    environment = {
+      CLUSTER_NAME = var.cluster_name
+      ROLE_PREFIX  = var.role_prefix
+    }
   }
 }
