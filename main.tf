@@ -109,6 +109,14 @@ data "external" "cluster_info" {
   ]
 }
 
+data "external" "cluster_id" {
+  program = [
+    "bash", "-c", <<EOT
+      rosa list clusters -o json | jq -c '.[] | select(.name=="${var.cluster_name}") | {id: .id}'
+    EOT
+  ]
+}
+
 # Cluster admin creds
 data "external" "cluster_creds" {
   program = [
@@ -121,6 +129,19 @@ data "external" "cluster_creds" {
   ]
 }
 
+provisioner "local-exec" {
+  when    = destroy
+  command = <<EOT
+    echo ">>> Deleting ROSA cluster"
+    rosa delete cluster --cluster ${self.triggers.cluster_name} --yes --watch
+
+    echo ">>> Deleting Operator Roles"
+    rosa delete operator-roles --prefix ${self.triggers.role_prefix} --mode auto --yes
+
+    echo ">>> Deleting OIDC Provider"
+    rosa delete oidc-provider --cluster ${data.external.cluster_id.result.id} --mode auto --yes
+  EOT
+}
 
 # Outputs
 output "rosa_cluster_api_url" {
