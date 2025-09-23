@@ -58,8 +58,9 @@ resource "null_resource" "rosa_cluster" {
 data "external" "cluster_info" {
   program = [
     "bash", "-c", <<EOT
+      set -o pipefail
       rosa describe cluster --cluster ${var.cluster_name} -o json 2>/dev/null \
-      | jq -r '{ api_url: (.api.url // ""), console_url: (.console.url // "") }' \
+      | jq -c '{ api_url: (.api.url // ""), console_url: (.console.url // "") }' \
       || echo '{"api_url":"","console_url":""}'
     EOT
   ]
@@ -69,12 +70,14 @@ data "external" "cluster_info" {
 data "external" "cluster_creds" {
   program = [
     "bash", "-c", <<EOT
+      set -o pipefail
       rosa describe admin --cluster ${var.cluster_name} -o json 2>/dev/null \
-      | jq -r '{ username: (.username // ""), password: (.password // "") }' \
+      | jq -c '{ username: (.username // ""), password: (.password // "") }' \
       || echo '{"username":"","password":""}'
     EOT
   ]
 }
+
 
 # Outputs
 output "rosa_cluster_api_url" {
