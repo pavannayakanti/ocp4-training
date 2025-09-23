@@ -14,8 +14,12 @@ provider "ocm" {
 resource "ocm_cluster" "iris_ocp4" {
   name           = var.cluster_name
   cloud_provider = "aws"
-  region         = var.aws_region
-  multi_az       = false
+
+  cloud_region {
+    id = var.aws_region
+  }
+
+  multi_az = false
 
   sts {
     role_arn              = var.role_arn
@@ -24,17 +28,29 @@ resource "ocm_cluster" "iris_ocp4" {
     worker_role_arn       = var.worker_role_arn
   }
 
-  version              = var.openshift_version
-  compute_nodes        = var.compute_nodes
-  compute_machine_type = var.compute_machine_type
-  aws_billing_account_id = var.aws_account_id
+  version {
+    id = var.openshift_version
+  }
 
-  machine_cidr = var.machine_cidr
-  service_cidr = var.service_cidr
-  pod_cidr     = var.pod_cidr
-  host_prefix  = var.host_prefix
+  compute {
+    replicas = var.compute_nodes
+    machine_type {
+      id = var.compute_machine_type
+    }
+  }
+
+  aws {
+    account_id = var.aws_account_id
+  }
+
+  network {
+    machine_cidr = var.machine_cidr
+    service_cidr = var.service_cidr
+    pod_cidr     = var.pod_cidr
+    host_prefix  = var.host_prefix
+  }
 
   properties = {
-    "iris-training" = "ocp4"
+    "training" = "ocp4"
   }
 }
