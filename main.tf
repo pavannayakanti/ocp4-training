@@ -54,28 +54,24 @@ resource "null_resource" "rosa_cluster" {
   }
 }
 
-# Fetch cluster info safely
+# Cluster info
 data "external" "cluster_info" {
   program = [
     "bash", "-c", <<EOT
       rosa describe cluster --cluster ${var.cluster_name} -o json 2>/dev/null \
-      | jq -r '{
-          api_url: (.api.url // ""),
-          console_url: (.console.url // "")
-        }'
+      | jq -r '{ api_url: (.api.url // ""), console_url: (.console.url // "") }' \
+      || echo '{"api_url":"","console_url":""}'
     EOT
   ]
 }
 
-# Fetch admin credentials safely
+# Cluster admin creds
 data "external" "cluster_creds" {
   program = [
     "bash", "-c", <<EOT
       rosa describe admin --cluster ${var.cluster_name} -o json 2>/dev/null \
-      | jq -r '{
-          username: (.username // ""),
-          password: (.password // "")
-        }'
+      | jq -r '{ username: (.username // ""), password: (.password // "") }' \
+      || echo '{"username":"","password":""}'
     EOT
   ]
 }
