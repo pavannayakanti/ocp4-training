@@ -77,26 +77,3 @@ data "external" "cluster_creds" {
     EOT
   ]
 }
-
-# Outputs
-output "rosa_cluster_api_url" {
-  value       = data.external.cluster_info.result.api_url
-  description = "The API URL of the ROSA cluster"
-}
-
-output "rosa_cluster_console_url" {
-  value       = data.external.cluster_info.result.console_url
-  description = "The Web Console URL of the ROSA cluster"
-}
-
-output "rosa_cluster_admin_username" {
-  value       = data.external.cluster_creds.result.username
-  description = "The cluster-admin username"
-}
-
-output "rosa_cluster_admin_password" {
-  value       = data.external.cluster_creds.result.password
-  description = "The cluster-admin password"
-  sensitive   = true
-}
-
