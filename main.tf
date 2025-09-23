@@ -54,42 +54,49 @@ resource "null_resource" "rosa_cluster" {
   }
 }
 
-# Fetch cluster info
+# Fetch cluster info (flatten into key/values for Terraform)
 data "external" "cluster_info" {
   program = [
     "bash", "-c", <<EOT
-      rosa describe cluster --cluster ${var.cluster_name} -o json
+      rosa describe cluster --cluster ${var.cluster_name} -o json | jq -r '{
+        api_url: .api.url,
+        console_url: .console.url
+      }'
     EOT
   ]
 }
 
-# Fetch admin credentials
+# Fetch kubeadmin credentials (flattened)
 data "external" "cluster_creds" {
   program = [
     "bash", "-c", <<EOT
-      rosa describe admin --cluster ${var.cluster_name} -o json
+      rosa describe admin --cluster ${var.cluster_name} -o json | jq -r '{
+        username: .username,
+        password: .password
+      }'
     EOT
   ]
 }
 
 # Outputs
 output "rosa_cluster_api_url" {
-  value       = try(data.external.cluster_info.result.api.url, null)
+  value       = data.external.cluster_info.result.api_url
   description = "The API URL of the ROSA cluster"
 }
 
 output "rosa_cluster_console_url" {
-  value       = try(data.external.cluster_info.result.console.url, null)
+  value       = data.external.cluster_info.result.console_url
   description = "The Web Console URL of the ROSA cluster"
 }
 
 output "rosa_cluster_admin_username" {
-  value       = try(data.external.cluster_creds.result.username, null)
+  value       = data.external.cluster_creds.result.username
   description = "The cluster-admin username"
 }
 
 output "rosa_cluster_admin_password" {
-  value       = try(data.external.cluster_creds.result.password, null)
+  value       = data.external.cluster_creds.result.password
   description = "The cluster-admin password"
   sensitive   = true
 }
+
