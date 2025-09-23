@@ -18,6 +18,7 @@ resource "null_resource" "install_rosa" {
 
 resource "null_resource" "rosa_cluster" {
   # Triggers (used for destroy-time provisioners)
+depends_on = [null_resource.install_rosa]
   triggers = {
     cluster_name = var.cluster_name
     role_prefix  = var.role_prefix
