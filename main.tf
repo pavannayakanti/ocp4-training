@@ -1,6 +1,8 @@
 resource "null_resource" "rosa_cluster" {
+  # Create cluster
   provisioner "local-exec" {
     command = <<EOT
+      echo ">>> Creating ROSA cluster: ${var.cluster_name}"
       rosa create cluster \
         --cluster-name ${var.cluster_name} \
         --sts \
@@ -21,12 +23,27 @@ resource "null_resource" "rosa_cluster" {
         --pod-cidr ${var.pod_cidr} \
         --host-prefix ${var.host_prefix} \
         --yes
+
+      echo ">>> Creating Operator Roles"
+      rosa create operator-roles --cluster ${var.cluster_name} --mode auto --yes
+
+      echo ">>> Creating OIDC Provider"
+      rosa create oidc-provider --cluster ${var.cluster_name} --mode auto --yes
     EOT
   }
 
-  # Destroy cluster on terraform destroy
+  # Destroy cluster and related IAM
   provisioner "local-exec" {
     when    = destroy
-    command = "rosa delete cluster --cluster ${var.cluster_name} --yes --watch"
+    command = <<EOT
+      echo ">>> Deleting ROSA cluster: ${var.cluster_name}"
+      rosa delete cluster --cluster ${var.cluster_name} --yes --watch
+
+      echo ">>> Deleting Operator Roles"
+      rosa delete operator-roles --prefix ${var.role_prefix} --mode auto --yes
+
+      echo ">>> Deleting OIDC Provider"
+      rosa delete oidc-provider --cluster ${var.cluster_name} --mode auto --yes
+    EOT
   }
 }
