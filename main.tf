@@ -14,41 +14,30 @@ provider "ocm" {
 resource "ocm_cluster" "iris_ocp4" {
   name           = var.cluster_name
   cloud_provider = "aws"
+  cloud_region   = var.aws_region
+  multi_az       = false
 
-  cloud_region {
-    id = var.aws_region
-  }
+  # STS IAM roles
+  sts_role_arn              = var.role_arn
+  sts_support_role_arn      = var.support_role_arn
+  sts_controlplane_role_arn = var.controlplane_role_arn
+  sts_worker_role_arn       = var.worker_role_arn
 
-  multi_az = false
+  # OpenShift version (must use correct ID, e.g., openshift-v4.19.11)
+  openshift_version = var.openshift_version
 
-  sts {
-    role_arn              = var.role_arn
-    support_role_arn      = var.support_role_arn
-    controlplane_role_arn = var.controlplane_role_arn
-    worker_role_arn       = var.worker_role_arn
-  }
+  # Compute pool
+  compute_nodes        = var.compute_nodes
+  compute_machine_type = var.compute_machine_type
 
-  version {
-    id = var.openshift_version
-  }
+  # AWS account
+  aws_account_id = var.aws_account_id
 
-  compute {
-    replicas = var.compute_nodes
-    machine_type {
-      id = var.compute_machine_type
-    }
-  }
-
-  aws {
-    account_id = var.aws_account_id
-  }
-
-  network {
-    machine_cidr = var.machine_cidr
-    service_cidr = var.service_cidr
-    pod_cidr     = var.pod_cidr
-    host_prefix  = var.host_prefix
-  }
+  # Networking
+  machine_cidr = var.machine_cidr
+  service_cidr = var.service_cidr
+  pod_cidr     = var.pod_cidr
+  host_prefix  = var.host_prefix
 
   properties = {
     "training" = "ocp4"
