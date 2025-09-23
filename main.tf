@@ -1,5 +1,11 @@
 resource "null_resource" "rosa_cluster" {
-  # Create cluster
+  # Triggers (used for destroy-time provisioners)
+  triggers = {
+    cluster_name = var.cluster_name
+    role_prefix  = var.role_prefix
+  }
+
+  # Create cluster + operator roles + OIDC
   provisioner "local-exec" {
     command = <<EOT
       echo ">>> Creating ROSA cluster: ${var.cluster_name}"
@@ -32,23 +38,58 @@ resource "null_resource" "rosa_cluster" {
     EOT
   }
 
-  # Destroy cluster and IAM (use env vars instead of var.* directly)
+  # Destroy cluster + IAM
   provisioner "local-exec" {
     when    = destroy
     command = <<EOT
       echo ">>> Deleting ROSA cluster"
-      rosa delete cluster --cluster $CLUSTER_NAME --yes --watch
+      rosa delete cluster --cluster ${self.triggers.cluster_name} --yes --watch
 
       echo ">>> Deleting Operator Roles"
-      rosa delete operator-roles --prefix $ROLE_PREFIX --mode auto --yes
+      rosa delete operator-roles --prefix ${self.triggers.role_prefix} --mode auto --yes
 
       echo ">>> Deleting OIDC Provider"
-      rosa delete oidc-provider --cluster $CLUSTER_NAME --mode auto --yes
+      rosa delete oidc-provider --cluster ${self.triggers.cluster_name} --mode auto --yes
     EOT
-
-    environment = {
-      CLUSTER_NAME = var.cluster_name
-      ROLE_PREFIX  = var.role_prefix
-    }
   }
+}
+
+# Fetch cluster info
+data "external" "cluster_info" {
+  program = [
+    "bash", "-c", <<EOT
+      rosa describe cluster --cluster ${var.cluster_name} -o json
+    EOT
+  ]
+}
+
+# Fetch admin credentials
+data "external" "cluster_creds" {
+  program = [
+    "bash", "-c", <<EOT
+      rosa describe admin --cluster ${var.cluster_name} -o json
+    EOT
+  ]
+}
+
+# Outputs
+output "rosa_cluster_api_url" {
+  value       = try(data.external.cluster_info.result.api.url, null)
+  description = "The API URL of the ROSA cluster"
+}
+
+output "rosa_cluster_console_url" {
+  value       = try(data.external.cluster_info.result.console.url, null)
+  description = "The Web Console URL of the ROSA cluster"
+}
+
+output "rosa_cluster_admin_username" {
+  value       = try(data.external.cluster_creds.result.username, null)
+  description = "The cluster-admin username"
+}
+
+output "rosa_cluster_admin_password" {
+  value       = try(data.external.cluster_creds.result.password, null)
+  description = "The cluster-admin password"
+  sensitive   = true
 }
