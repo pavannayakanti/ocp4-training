@@ -4,7 +4,10 @@ variable "cluster_admin_password" {
   type      = string
   sensitive = true
 }
-
+variable "rosa_token" {
+  type      = string
+  sensitive = true
+}
 variable "role_arn" { type = string }
 variable "support_role_arn" { type = string }
 variable "controlplane_role_arn" { type = string }
