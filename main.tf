@@ -1,3 +1,21 @@
+resource "null_resource" "install_rosa" {
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-lc"]
+    command = <<EOT
+      if ! command -v rosa >/dev/null 2>&1; then
+        echo ">>> Installing ROSA CLI"
+        curl -L -o /tmp/rosa.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz
+        tar -xvzf /tmp/rosa.tar.gz -C /tmp
+        mkdir -p $HOME/bin
+        mv /tmp/rosa $HOME/bin/
+        echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+      else
+        echo ">>> ROSA CLI already installed"
+      fi
+    EOT
+  }
+}
+
 resource "null_resource" "rosa_cluster" {
   # Triggers (used for destroy-time provisioners)
   triggers = {
